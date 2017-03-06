@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.div_c
+{
+  margin-left:50px;
+  margin-right:50px;
+  margin-top:50px;
+  margin-bottom:50px;
+}
+.lab_5
+{
+  font-size:15px;
+  color:White;
+  margin-left:-10px;
+}
+.cu_b
+{
+  cursor:pointer;
+  font-weight:bold;
+}
+.sp_5
+{
+  width:10px;
+  height:5px;
+}
+.label
+{
+  float:left;
+  width:50%;
+  color:white;
+  margin-bottom:-2px;
+  font-size:13px;
+}
+.lab_r
+{
+  float:left;
+  width:50%;
+  color:white;
+  text-align:right;
+  font-size:13px;
+}
+.cl
+{
+ clear:left;
+}
+.line
+{
+ height:1px;
+  background-color:white;
+  width:100%;
+  margin-top:5px;
+  margin-bottom:5px;
+  overflow:hidden;
+}
+.lab_l
+{
+  float:left;
+  width:40%;
+  color:white;
+  margin-bottom:-2px;
+  margin-left:10%;
+  font-size:13px;
+}
+.line_l
+{
+  height:1px;
+  background-color:white;
+  width:450px;
+  margin-top:5px;
+  margin-bottom:5px;
+  margin-left:50px;
+  overflow:hidden;
+}
+.in_body
+{
+  margin-top:0px;
+  margin-left:0px;
+  margin-right:0px;
+  margin-bottom:0px;
+  background-color:transparent;
+}
+</style>
+<script src="/zepto.min.js"></script>
+<script>
+  $(function () {
+    function setValue(data){
+      $("#time").html(data.time);
+      $("#date").html(data.date);
+      $("#temp").html(data.temp);
+      $("#humi").html(data.humi);
+      $("#adc").html(data.adc);      
+    }
+    $.getJSON('/boardinfo', function (data) {
+        setValue(data);
+        setInterval(function(){
+         $.getJSON('/boardinfo', function (data) {
+            setValue(data);
+          });
+        },2000); 
+    });
+  });
+</script>
+</head>
+<body class="in_body">
+    <div class="div_c" style="font-family:微软雅黑">
+        <div class="lab_5 cu_b" onclick="upfold(2);child_getH();"><font id="up_2"></font></div>
+                <div class="sp_5"></div>
+                <div id="up_2_div">
+                <div class="label">时间</div>
+                <div class="lab_r" id="time"></div>
+                <div class="cl"></div>
+                <div class="line"></div>
+                <div class="label">日期</div>
+                <div class="lab_r" id="date"></div>
+                <div class="cl"></div>
+                <div class="line"></div>
+                <div class="label">环境温度</div>
+                <div class="lab_r" id="temp"></div>
+                <div class="cl"></div>
+                <div class="line"></div>
+                <div class="label">环境湿度</div>
+                <div class="lab_r" id="humi"></div>
+                <div class="cl"></div>
+                <div class="line"></div>
+                <div class="label">ADC值</div>
+                <div class="lab_r" id="adc"></div>
+                <div class="cl"></div>
+                <div class="line"></div>
+                </div>
+    </div>
+</body>
+</html>   
