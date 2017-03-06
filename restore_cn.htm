@@ -1,0 +1,89 @@
+<!DOCTYPE>
+<html>
+<head>
+<style>
+.div_c
+{
+  margin-left:50px;
+  margin-right:50px;
+  margin-top:50px;
+  margin-bottom:50px;
+}
+.w_s15_b
+{
+  color:White;
+  font-size:15px;
+  font-weight:bold;
+}
+.sp_53
+{
+  width:10px;
+  height:53px;
+}
+.sp_60
+{
+  width:10px;
+  height:60px;
+}
+.lab_4
+{
+  margin-left:70px;
+  margin-right:50px;
+  color:white;
+  font-size:13px;
+}
+.in_body
+{
+  margin-top:0px;
+  margin-left:0px;
+  margin-right:0px;
+  margin-bottom:0px;
+  background-color:transparent;
+}
+.btn
+{
+  width:66px;
+  height:27px;
+  border-style:none;
+  border-radius:3px 3px 3px 3px;
+  font-size:14px;
+  color:#0163AC;
+  cursor:pointer;
+}
+.r20
+{
+  margin-right:20px;
+}
+</style>
+<script src="/zepto.min.js"></script>
+<script>
+  $(function () {
+    $("#restart").click(function(){
+      $.get("http://"+location.hostname+"/restart",
+        function(res){
+          alert("开始重启");
+      }); 
+    });
+    $("#restore").click(function(){
+      $.get("http://"+location.hostname+"/restore",
+        function(res){
+          alert("开始出厂参数初始化并重启");
+      }); 
+    });
+  });
+</script>
+</head>
+<body class="in_body">
+    <div class="div_c" style="font-family:微软雅黑">
+        <div style="height:400px">
+            <font class="w_s15_b">重启模块</font>
+            <div class="lab_4">重要提示：<br /><br />重启后，设备会断开网络一段时间,您必须重新登录配置界面，建议完成所有配置后再重启。<br />确定吗？</div>
+            <div class="lab_4"><input id="restart" type="button" class="btn r20" value="确认"/></div>
+            <div class="sp_60"></div>
+            <font class="w_s15_b">恢复出厂设置</font>
+            <div class="lab_4">重要提示：<br/><br/>点击确定或者长按模式切换键进行出厂设置，所有用户的配置都将恢复出厂设置.您可以通过手机配置连接路由器.管理页面登录用户名:admin,口令:123456。<br/>确定恢复出厂设置吗？</div>
+            <div class="lab_4"><input id="restore" type="button" class="btn r20" value="确认"/></div>
+        </div>
+    </div>
+</body>
+</html>
