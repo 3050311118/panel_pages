@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+ <head>
+ <meta charset="utf-8">
+ <script type="text/javascript">
+ function user_update_apply()
+ {
+   if (f.new_user_name.value=="")
+   {
+     alert("用户名不能为空!");
+     return ;
+   }
+   if(f.new_user_name.value.length>15)
+   {
+     alert("用户名的字符必须小于15个！");
+     return ;
+   }
+   if(f.new_user_password.value.length>15)
+   {
+     alert("密码的字符必须小于15个！");
+     return ;
+   }
+ }
+</script>
+ <style>
+ .in_body
+ {
+   margin-top:0px;
+   margin-left:0px;
+   margin-right:0px;
+   margin-bottom:0px;
+   background-color:transparent;
+ }
+ .div_c
+ {
+   margin-left:50px;
+   margin-right:50px;
+   margin-top:50px;
+   margin-bottom:50px;
+ }
+ .white
+ {
+   color:White;
+ }
+ .s15
+ {
+   font-size:15px;
+ }
+ .b
+ {
+   font-weight:bold;
+ }
+ .sp_60
+ {
+   width:10px;
+   height:60px;
+ }
+ .lab_4
+ {
+   margin-left:70px;
+   margin-right:50px;
+   color:white;
+   font-size:13px;
+ }
+ .lab_2
+ {
+   float:left;
+   width:40%;
+   color:white;
+   margin-bottom:-2px;
+   font-size:13px;
+ }
+ .cl
+ {
+   clear:left;
+ }
+ .sp_10
+ {
+   width:10px;
+   height:10px;
+ }
+ .line2
+ {
+   height:1px;
+   background-color:white;
+   width:100%;
+   margin-bottom:10px;
+   overflow:hidden;
+ }
+ .text_div
+ {
+   float:left;
+   width:60%;
+   text-align:right;
+ }
+ .btn
+ {
+   width:66px;
+   height:27px;
+   border-style:none;
+   border-radius:3px 3px 3px 3px;
+   font-size:14px;
+   color:#0163AC;
+   cursor:pointer;
+ }
+ </style>
+<script src="/zepto.min.js"></script>
+<script>
+  $(function () {
+    $("#save").click(function(){
+      var arr={};
+      arr.authname=$("#newname").val();
+      arr.authpasswd=$("#newpasswd").val();
+      $.post("http://"+location.hostname+"/myaccount", arr,
+        function(data){
+          var json=JSON.parse(data);
+          $("#authname").html(json.authname);
+          $("#authpasswd").html(json.authpasswd);
+      }); 
+    });
+    $.getJSON('/myaccount', function (data) {
+      $("#authname").html(data.authname);
+      $("#authpasswd").html(data.authpasswd);
+    });
+  });
+</script>
+ </head>
+ <body class="in_body" onload="init_account_form()">
+     <div class="div_c" style="font-family:微软雅黑">
+         <form name= "form_user_update" method="post" action="modifyuser">
+             <font class=" white s15 b">设置一个新的登录账号与密码</font>
+             <div class="sp_60"></div>
+             <div class="lab_4">
+                 <div class="lab_2">原用户名</div>
+                 <div class="lab_2" style="float:right" id="authname" ></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">原密码</div>
+                 <div class="lab_2" style="float:right" id="authpasswd" ></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">新用户名</div>
+                 <div class="text_div"><input id="newname" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">新密码</div>
+                 <div class="text_div"><input id="newpasswd" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="sp_10"></div>
+                 <div class="sp_10"></div>
+                 <div style="width:100%;text-align:right">
+                     <input id="save" type="button" class="btn" value="保存"/>
+                 </div>
+             </div>
+       </form>
+     </div>
+ </body>
+</html>
