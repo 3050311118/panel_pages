@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+ <html>
+ <head>
+ <style>
+ .in_body
+ {
+   margin-top:0px;
+   margin-left:0px;
+   margin-right:0px;
+   margin-bottom:0px;
+   background-color:transparent;
+ }
+ .div_c
+ {
+   margin-left:50px;
+   margin-right:50px;
+   margin-top:50px;
+   margin-bottom:50px;
+ }
+ .white
+ {
+   color:White;
+ }
+ .s15
+ {
+   font-size:15px;
+ }
+ .b
+ {
+   font-weight:bold;
+ }
+ .sp_60
+ {
+   width:10px;
+   height:60px;  
+ }
+ .lab_4
+ {
+   margin-left:70px;
+   margin-right:50px;
+   color:white;
+   font-size:13px;
+ }
+ .lab_2
+ {
+   float:left;
+   width:40%;
+   color:white;
+   margin-bottom:-2px;
+   font-size:13px;
+ }
+ .cl
+ {
+   clear:left;
+ }
+ .sp_10
+ {
+   width:10px;
+   height:10px;
+ }
+ .line2
+ {
+   height:1px;
+   background-color:white;
+   width:100%;
+   margin-bottom:10px;
+   overflow:hidden;
+ }
+ .text_div
+ {
+   float:left;
+   width:60%;
+   text-align:right;
+ }
+ .btn
+ {
+   width:66px;
+   height:27px;
+   border-style:none;
+   border-radius:3px 3px 3px 3px;
+   font-size:14px;
+   color:#0163AC;
+   cursor:pointer;
+ }
+ </style>
+ <script src="/zepto.min.js"></script>
+<script>
+  $(function () {
+    var isDhcp=0;
+    function dhcpAction(isDhcp){
+      if(isDhcp===1){
+        $("#static").attr('checked', 'true');
+        $("#dhcp").attr('checked', 'false');
+        
+        $('#staip').attr("disabled",true);
+        $('#stagateway').attr("disabled",true);
+        $('#stadns').attr("disabled",true);
+        $('#stanetmask').attr("disabled",true);
+      }else{
+        $("#dhcp").attr('checked', 'true');
+        $("#static").attr('checked', 'false');
+        
+        $('#staip').removeAttr("disabled");
+        $('#stagateway').removeAttr("disabled");
+        $('#stadns').removeAttr("disabled");
+        $('#stanetmask').removeAttr("disabled");
+      }
+    }
+    $("#dhcp").change(function() { 
+      isDhcp=1;
+      dhcpAction(isDhcp);
+    }); 
+    $("#static").change(function() { 
+      isDhcp=0; 
+      dhcpAction(isDhcp);
+    }); 
+    function setValue(json){
+      $("#mode").get(0).selectedIndex = json.mode; 
+      $("#staip").val(json.staip);
+      $("#stagateway").val(json.stagateway);
+      $("#stanetmask").val(json.stanetmask);
+      $("#stadns").val(json.stadns);
+      $("#apip").val(json.apip);
+      isDhcp=json.isDhcp;
+      dhcpAction(isDhcp);
+    }
+    $("#save").click(function(){
+      var arr={};
+      arr.staip=$("#staip").val();
+      arr.stagateway=$("#stagateway").val();
+      arr.stanetmask=$("#stanetmask").val();
+      arr.stadns=$("#stadns").val();
+      arr.apip=$("#apip").val();
+      arr.mode=$("#mode").get(0).selectedIndex;
+      arr.isDhcp=isDhcp;
+
+      $.post("http://"+location.hostname+"/network", arr,
+        function(data){
+          var json=JSON.parse(data);
+          setValue(json);
+          alert("设置成功 重启之后生效")
+      }); 
+    });
+    $.getJSON('/network', function (data) {
+      setValue(data);
+    });
+  });
+</script>
+
+ </head>
+ <body class="in_body" onload="init_account_form()">
+     <div class="div_c" style="font-family:微软雅黑">
+         <form name= "form_user_update" method="post" action="modifynetwork">
+             <font class=" white s15 b">网络设置</font>
+             <div class="sp_60"></div>
+             <div class="lab_4">
+                 <div class="lab_2">wifi工作模式</div>
+                 <div class="text_div">
+                   <select id="mode">
+                    <option value="sta">STA模式</option>
+                    <option value="ap">AP模式</option>
+                    <option value="sta+ap">STA+AP模式</option>
+                   </select>
+                 </div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="sp_10"></div>
+                 <div class="sp_10"></div>
+                 <div class="lab_2">网络接入</div>
+                 <div class="text_div">
+                    <input type="radio" name="dhcp" id="dhcp">动态IP
+                    <input type="radio" name="dhcp" id="static">静态IP
+                 </div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>                 
+                 <div class="lab_2">STA  IP</div>
+                 <div class="text_div"><input id="staip" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">STA 网关</div>
+                 <div class="text_div"><input id="stagateway" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">STA 子网掩码</div>
+                 <div class="text_div"><input id="stanetmask" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 <div class="lab_2">STA  DNS</div>
+                 <div class="text_div"><input id="stadns" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+                 
+                 <div class="sp_10"></div>
+                 <div class="sp_10"></div>
+                 <div class="lab_2">模块热点 IP</div>
+                 <div class="text_div"><input id="apip" type="text" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
+
+                 <div class="sp_10"></div>
+                 <div class="sp_10"></div>
+                 <div style="width:100%;text-align:right">
+                     <input id="save" type="button" class="btn" value="保存"/>
+                 </div>
+             </div>
+       </form>
+     </div>
+ </body>
+</html>
