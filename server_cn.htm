@@ -88,8 +88,12 @@
 <script>
   $(function () {
     var isRemote;
+    var pushEn;
     $("#isRemote").change(function(){
       isRemote = !isRemote;
+    });
+    $("#pushEn").change(function(){
+      pushEn = !pushEn;
     });
     function setValue(json){
       $("#openid").val(json.openid);
@@ -100,6 +104,11 @@
       }else{
         $("#isRemote").removeAttr("checked");        
       }
+      if(json.pushEn === 1){
+        $("#pushEn").attr('checked', 'true');
+      }else{
+        $("#pushEn").removeAttr("checked");        
+      }
     }
     $("#save").click(function(){
       var arr={};
@@ -108,6 +117,8 @@
       arr.nickname=$("#nickname").val();
       if(isRemote===true) arr.isRemote=1;
       else arr.isRemote=0;
+      if(pushEn===true) arr.pushEn=1;
+      else arr.pushEn=0;      
       
       $.post("http://"+location.hostname+"/server", arr,
         function(data){
@@ -143,6 +154,11 @@
                  <div class="cl"></div>
                  <div class="sp_10"></div>
                  <div class="line2"></div>
+                 <div class="lab_2">打开数据传送</div>
+                 <div class="text_div"><input id="pushEn" type="checkbox" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
                  <div class="lab_2">数据传送间隔</div>
                  <div class="text_div"><input id="interval" type="text" class="text2" /></div>
                  <div class="cl"></div>
@@ -158,4 +174,3 @@
      </div>
 </body>
 </html>
-
