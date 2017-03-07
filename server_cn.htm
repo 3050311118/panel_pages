@@ -112,10 +112,17 @@
         pushEn=true;
       }else{
         $("#pushEn").removeAttr("checked"); 
-        pushEn=false
+        pushEn=false;
       }
     }
     $("#save").click(function(){
+      var interval=$("#interval").val();
+      if(parseInt(interval)<10) {
+        alert("时间间隔应大于10秒");
+        $("#interval").val(10);
+        return;
+      }
+      
       var arr={};
       arr.openid=$("#openid").val();
       arr.interval=$("#interval").val();
