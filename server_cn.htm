@@ -87,24 +87,37 @@
 <script src="/zepto.min.js"></script>
 <script>
   $(function () {
+    var isRemote;
+    $("#isRemote").change(function(){
+      isRemote = !isRemote;
+    });
+    function setValue(json){
+      $("#openid").val(json.openid);
+      $("#interval").val(json.interval);
+      $("#nickname").val(json.nickname);
+      if(json.isRemote === 1){
+        $("#isRemote").attr('checked', 'true');
+      }else{
+        $("#isRemote").removeAttr("checked");        
+      }
+    }
     $("#save").click(function(){
       var arr={};
       arr.openid=$("#openid").val();
       arr.interval=$("#interval").val();
       arr.nickname=$("#nickname").val();
+      if(isRemote===1) arr.isRemote=1;
+      else arr.isRemote=0;
+      
       $.post("http://"+location.hostname+"/server", arr,
         function(data){
           var json=JSON.parse(data);
-          $("#openid").val(json.openid);
-          $("#interval").val(json.interval);
-          $("#nickname").val(json.nickname);
+          setValue(json)
           alert("设置成功")
       }); 
     });
     $.getJSON('/server', function (data) {
-      $("#openid").val(data.openid);
-      $("#interval").val(data.interval);  
-      $("#nickname").val(data.nickname);
+      setValue(data);
     });
   });
 </script>
@@ -115,6 +128,11 @@
              <font class=" white s15 b">服务器参数设置</font>
              <div class="sp_60"></div>
              <div class="lab_4">
+                 <div class="lab_2">允许连接外网服务器</div>
+                 <div class="text_div"><input id="isRemote" type="checkbox" class="text2" /></div>
+                 <div class="cl"></div>
+                 <div class="sp_10"></div>
+                 <div class="line2"></div>
                  <div class="lab_2">设备别名</div>
                  <div class="text_div"><input id="nickname" type="text" class="text2" /></div>
                  <div class="cl"></div>
