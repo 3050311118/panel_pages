@@ -106,7 +106,7 @@
       arr.openid=$("#openid").val();
       arr.interval=$("#interval").val();
       arr.nickname=$("#nickname").val();
-      if(isRemote===1) arr.isRemote=1;
+      if(isRemote===true) arr.isRemote=1;
       else arr.isRemote=0;
       
       $.post("http://"+location.hostname+"/server", arr,
