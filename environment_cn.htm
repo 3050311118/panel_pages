@@ -85,6 +85,21 @@
 <script src="/zepto.min.js"></script>
 <script>
   $(function () {
+    $("#save").click(function(){
+      var now=new Date()
+      var arr={};
+      arr.y=now.getYear();
+      arr.m=now.getMonth()+1;
+      arr.d=now.getDate();
+      arr.h=now.getHours();
+      arr.mi=now.getMinutes();
+      arr.s=now.getSeconds();
+
+      $.post("http://"+location.hostname+"/settime", arr,
+        function(data){
+          alert("设置成功")
+      }); 
+    });
     function setValue(data){
       $("#time").html(data.time);
       $("#date").html(data.date);
@@ -128,6 +143,12 @@
                 <div class="lab_r" id="adc"></div>
                 <div class="cl"></div>
                 <div class="line"></div>
+                
+                <div class="sp_10"></div>
+                <div class="sp_10"></div>
+                <div style="width:100%;text-align:right">
+                     <input id="save" type="button" class="btn" value="同步时间"/>
+                </div>            
                 </div>
     </div>
 </body>
