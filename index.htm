@@ -1,0 +1,554 @@
+<!doctype html>
+<html manifest="cache.manifest">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <script src="http://static.mogudz.com/js/jquery.min.js"></script>
+  <script src="http://static.mogudz.com/js/highcharts.js"></script>
+  <script src="http://static.mogudz.com/js/mqttws31.js"></script>  
+  <script>
+  //全局变量
+      var chart;
+      var dbflag=0;
+      var ws;
+      var first=true;
+      var edit=false;
+      var et=0;
+      var min={};
+      var intervalID;
+      min.temp=0;min.humi=0;min.speed=0;min.concent=0;min.pressure=0;
+      var max={};
+      max.temp=0;max.humi=0;max.speed=0;max.concent=0;max.pressure=0;
+      if (!window.openDatabase || !window.localStorage) {
+          alert("您的浏览器不支持本地存储，建议安装最新的chrome浏览器");
+        dbflag=0;
+      }else {
+        dbflag=1;
+      }
+      var ip=location.hostname;
+      if(localStorage.hhip) ip=localStorage.hhip;
+      function tmsync()
+      {
+          var now=new Date()
+          var arr={};
+          arr.action="synctime";
+          arr.y=now.getYear();
+          arr.m=now.getMonth()+1;
+          arr.d=now.getDate();
+          arr.h=now.getHours();
+          arr.mi=now.getMinutes();
+          arr.s=now.getSeconds();
+          
+          $.post("http://"+ip+"/settime", arr,
+             function(data){
+               alert("Data Loaded: " + JSON.stringify(data));
+          });    
+      }
+      function on_focus(v){
+          et = v;
+          edit=true;
+      }
+      function on_blur() {
+          et = 0;
+          edit = false;
+      }
+      var db = openDatabase('mydb', '1.0', 'mydb', 2 * 1024 * 1024);
+      db.transaction(function (tx) {
+          tx.executeSql('CREATE TABLE IF NOT EXISTS data (id unique, temp REAL,humi REAL,speed REAL,pressure REAL,time REAL,illum REAL)');
+      });
+      function dbInit()
+      {
+          db.transaction(function (context) {
+              context.executeSql('SELECT * FROM testTable', [], function (context, results) {
+                  var len = results.rows.length, i;
+                  console.log('Got '+len+' rows.');
+                  for (i = 0; i < len; i++){
+                      console.log('id: '+results.rows.item(i).id);
+                      console.log('name: '+results.rows.item(i).name);
+                  }
+              });
+          });
+      }
+      $(function () {
+          $("#setting").attr("href", ip);
+          $("#ipaddr").val(ip);
+          $("#dbop").click(function(){
+              if(dbflag===1){dbflag=2;$("#dbop").html("数据库已打开");}
+              else if(dbflag===2){dbflag=1;$("#dbop").html("数据库已关闭");}
+          });
+          var options= {
+              chart: {
+                  type: 'spline',
+                  backgroundColor: {
+                      linearGradient: [0, 0, 500, 500],
+                      stops: [
+                          [0, 'rgb(255, 255, 255)'],
+                          [1, 'rgb(200, 200, 255)']
+                      ]
+                  },
+                  animation: Highcharts.svg,
+                  marginRight: 10,
+                  events: {
+                      load: function () {
+                          var tempS = this.series[0];
+                          var humiS = this.series[1];
+                          var speedS = this.series[2];
+                          var pressureS = this.series[3];
+                          var concertS = this.series[4];
+                          tempS.hide();
+                          humiS.hide();
+                          speedS.hide();
+                          pressureS.hide();
+                          concertS.hide();
+                          function procData(data) {
+                              var data = JSON.parse(data);
+                              var temp = data.dispPara.temp;
+                              var humi = data.dispPara.humi;
+                              var speed = data.dispPara.speed;
+                              var pressure = data.dispPara.pressure;
+                              var time = data.dispPara.time;
+                              var illum = data.dispPara.illum;
+                              var concent = data.dispPara.concent;
+                              var alarm = data.dispPara.alarm;
+                              data.dispPara.devid=1;
+                              data.dispPara.type=1;
+                              var typeStr = "设备类型: ";
+                              switch (data.dispPara.type) {//
+                                  case 1:
+                                      tempS.show();
+                                      typeStr = typeStr + "干燥/培养/生化系列";
+                                      break;
+                                  case 2:
+                                      tempS.show();
+                                      typeStr = typeStr + "光照培养箱";
+                                      break;
+                                  case 3:
+                                      tempS.show();
+                                      humiS.show();
+                                      typeStr = typeStr + "恒温恒湿箱";
+                                      break;
+                                  case 4:
+                                      tempS.show();
+                                      humiS.show();
+                                      typeStr = typeStr + "人工气候培养";
+                                      break;
+                                  case 5:
+                                      tempS.show();
+                                      typeStr = typeStr + "配比式CO2培养箱";
+                                      break;
+                                  case 6:
+                                      tempS.show();
+                                      concertS.show();
+                                      typeStr = typeStr + "红外CO2培养箱";
+                                      break;
+                                  case 7:
+                                      tempS.show();
+                                      speedS.show();
+                                      typeStr = typeStr + "恒温摇床";
+                                      break;
+                                  case 8:
+                                      tempS.show();
+                                      speedS.show();
+                                      typeStr = typeStr + "旋蒸/搅拌器";
+                                      break;
+                                  case 9:
+                                      tempS.show();
+                                      pressureS.show();
+                                      typeStr = typeStr + "真空系列";
+                                      break;
+                                  case 10:
+                                      tempS.show();
+                                      typeStr = typeStr + "消毒柜系列";
+                                      break;
+                                  case 11:
+                                      tempS.show();
+                                      typeStr = typeStr + "低温系列";
+                                      break;
+                                  case 12:
+                                      tempS.show();
+                                      typeStr = typeStr + "药品/血液冷藏柜";
+                                      break;
+                              }
+                              $("#type").html(typeStr);
+                              var alarmStr = "报警信息: "
+                              switch (alarm) {
+                              }
+                              $("#alarm").html(alarmStr);
+                              if (data.dispPara.devid === 0) {
+                                  $("#htbus").html("485通信异常");
+                                  tempS.hide();
+                                  humiS.hide();
+                                  speedS.hide();
+                                  pressureS.hide();
+                                  concertS.hide();
+                              } else {
+                                  $("#htbus").html("485通讯正常");
+                                  var x = (new Date()).getTime();
+                                  tempS.addPoint([x, temp], true, true);
+                                  humiS.addPoint([x, humi], true, true);
+                                  speedS.addPoint([x, speed], true, true);
+                                  pressureS.addPoint([x, pressure], true, true);
+                                  concertS.addPoint([x, concent], true, true);
+                              }
+                              if (first === true) {
+                                  first = false;
+                                  min.temp = max.temp = temp;
+                                  min.humi = max.humi = humi;
+                                  min.speed = max.speed = speed;
+                                  min.concent = max.concent = concent;
+                                  min.pressure = max.pressure = pressure;
+                              }
+                              $("#time").html(data.modPara.time);
+                              $("#date").html(data.modPara.date);
+                              $("#dhttemp").html(data.modPara.dhttemp + "℃");
+                              $("#dhthumi").html(data.modPara.dhthumi + "%RH");
+                              $("#num").html(data.modPara.num);
+                              $("#adc").html(data.modPara.adc);
+                              var kg = "";
+                              if (data.modPara.relay === 1) kg = "开";
+                              else kg = "关";
+                              $("#relay").html(kg);
+                              if (edit === false) {
+                                  var tempSet = data.setPara.temp / 10;
+                                  tempSet = tempSet.toFixed(1);
+                                  $("#tempSet").val(tempSet);
+                                  $("#humiSet").val(data.setPara.humi);
+                                  $("#speedSet").val(data.setPara.speed);
+                                  $("#pressureSet").val(data.setPara.pressure);
+                                  $("#tmSet").val(data.setPara.time);
+                                  $("#illumSet").val(data.setPara.illum);
+                                  $("#concentSet").val(data.setPara.concent);
+                              }
+                              temp = temp.toFixed(1);
+                              $("#temp").html(temp);
+                              $("#humi").html(humi);
+                              $("#speed").html(speed);
+                              $("#pressure").html(pressure);
+                              $("#tm").html(time);
+                              $("#illum").html(illum);
+                              $("#concent").html(concent);
+                              if(dbflag===2)
+                              {
+                                  db.transaction(function (tx) {
+                                      tx.executeSql('INSERT INTO data (temp,humi,speed,pressure,time,illum) VALUES (?,?,?,?,?,?)', [temp, humi, speed, pressure, time, illum]);
+                                  });
+                                  $("#db").html("数据库正在记录");
+                              }else if(dbflag===1) $("#db").html("数据库未记录");
+                              if (data.dispPara.alarm > 0) {
+                                  navigator.vibrate(100);
+                                  audio.play();
+                              } else {
+                                  audio.pause();
+                              }
+                              $("#tempMin").html(min.temp);
+                              $("#tempMax").html(max.temp);
+                              $("#humiMin").html(min.humi);
+                              $("#humiMax").html(max.humi);
+                              $("#speedMin").html(min.speed);
+                              $("#speedMax").html(max.humi);
+                              $("#pressureMin").html(min.pressure);
+                              $("#pressureMax").html(max.pressure);
+                              $("#concentMin").html(min.concent);
+                              $("#concentMax").html(max.concent);
+                          };
+                          $("#status").html("设备正在连接中");
+                          intervalID=setInterval(function(){
+                           htmlobj=$.ajax({url:"http://"+ip+"/machineinfo",success: function(){
+                              procData(htmlobj.responseText);
+                              $("#status").html("设备连接成功");
+                            },error:function(){
+                              $("#status").html("设备连接失败");
+                            }});            
+                          },1000);   
+                      }
+                  }
+              },
+              title: {
+                  text: '测量数据'
+              },
+              xAxis: {
+                  type: 'datetime',
+                  tickPixelInterval: 50
+              },
+              yAxis: [
+                  { // Primary yAxis
+                      labels: {
+                          formatter: function () {
+                              return this.value + '°C';
+                          },
+                          style: {
+                              color: '#89A54E'
+                          }
+                      },
+                      title: {
+                          text: 'Temperature',
+                          style: {
+                              color: '#89A54E'
+                          }
+                      },
+                      opposite: true
+                  },
+                  { // Primary yAxis
+                      labels: {
+                          formatter: function () {
+                              return this.value + '%RH';
+                          },
+                          style: {
+                              color: '#89A54E'
+                          }
+                      },
+                      title: {
+                          text: 'Temperature',
+                          style: {
+                              color: '#89A54E'
+                          }
+                      },
+                      opposite: true
+                  }
+              ],
+              tooltip: {
+                  shared: true
+              },
+              legend: {
+                  enabled: true
+              },
+              plotOptions: {
+                  spline: {
+                      lineWidth: 1,
+                      states: {
+                          hover: {
+                              lineWidth: 5
+                          }
+                      },
+                      marker: {
+                          enabled: true
+                      },
+                      enableMouseTracking: true
+                  }
+              },
+              series: [
+                  {
+                      name: '温度',
+                      data: (function () {
+                          var data = [],
+                                  time = (new Date()).getTime(),
+                                  i;
+                          for (i = -19; i <= 0; i++) {
+                              data.push({
+                                  x: time + i * 1000,
+                                  y: 0
+                              });
+                          }
+                          return data;
+                      })(),
+                      tooltip: { valueSuffix: ' ℃' }
+                  },
+                  {
+                      name: '湿度',
+                      data: (function () {
+                          var data = [],
+                                  time = (new Date()).getTime(),
+                                  i;
+                          for (i = -19; i <= 0; i++) {
+                              data.push({
+                                  x: time + i * 1000,
+                                  y: 0
+                              });
+                          }
+                          return data;
+                      })(),
+                      tooltip: { valueSuffix: ' %RH' }
+                  },
+                  {
+                      name: '速度',
+                      data: (function () {
+                          var data = [],
+                                  time = (new Date()).getTime(),
+                                  i;
+                          for (i = -19; i <= 0; i++) {
+                              data.push({
+                                  x: time + i * 1000,
+                                  y: 0
+                              });
+                          }
+                          return data;
+                      })(),
+                      tooltip: { valueSuffix: ' RPM' }
+                  },
+                  {
+                      name: '压力',
+                      data: (function () {
+                          var data = [],
+                                  time = (new Date()).getTime(),
+                                  i;
+                          for (i = -19; i <= 0; i++) {
+                              data.push({
+                                  x: time + i * 1000,
+                                  y: 0
+                              });
+                          }
+                          return data;
+                      })(),
+                      tooltip: { valueSuffix: ' KPA' }
+                  },
+                  {
+                      name: '浓度',
+                      data: (function () {
+                          var data = [],
+                                  time = (new Date()).getTime(),
+                                  i;
+                          for (i = -19; i <= 0; i++) {
+                              data.push({
+                                  x: time + i * 1000,
+                                  y: 0
+                              });
+                          }
+                          return data;
+                      })(),
+                      tooltip: { valueSuffix: ' %' }
+                  }
+              ]
+          }
+          Highcharts.setOptions({
+              global: {
+                  useUTC: false
+              }
+          });
+          var audio = document.getElementById('audio_player');
+          audio.pause();
+          function reconnect()
+          {
+              clearInterval(intervalID);
+              ip=$("#ipaddr").val();
+              localStorage.hhip=ip;
+              $('#container').highcharts(options);
+          }
+          function on_key(e) {
+              if(e.keyCode===13 && edit===true)
+              {
+                  var arr={};
+                  switch(et)
+                  {
+                      case 1:arr.temp=$("#tempSet").val()*10;break;
+                      case 2:arr.speed=$("#speedSet").val();break;
+                      case 3:arr.humi=$("#humiSet").val();break;
+                      case 4:arr.pressure=$("#pressureSet").val();break;
+                      case 5:arr.time=$("#tmSet").val();break;
+                      case 6:arr.illum=$("#illumSet").val();break;
+                      case 7:arr.concent=$("#concentSet").val();break;
+                      case 8:edit=false;reconnect(); return;
+                  }
+                  $.post("http://"+ip+"/setpara", arr,
+                     function(data){
+                       alert("Data Loaded: " + JSON.stringify(data));
+                  }); 
+              }
+          }
+          document.onkeydown = on_key;
+          $('#container').highcharts(options);
+      });
+  </script>
+  <style>
+      #main{
+          height:680px;
+          background: #dffaff;
+          margin:10px 50px;
+          border-radius:20px 20px 20px 20px;
+      }
+      b{
+          /*float:left;*/
+          margin:2px 10px 2px 10px;
+          padding-top:4px;
+          font-size:20px;
+          font-family: "楷体"
+          font-weight:bold;
+      }
+      a,p{
+          float:left;
+          margin:2px 10px 2px 10px;
+          padding-top:4px;
+          font-size:20px;
+          font-family: Georgia, serif;
+          font-weight:bold;
+          text-shadow:3px 3px 3px #568F23;
+      }
+      h1{
+          float:left;
+      }
+      #container{
+          height:100%;
+          width:100%;
+          margin-left: 30px;
+          margin-top:20px;
+          float:left;
+      }
+      .shadow
+      {
+          filter:progid:DXImageTransform.Microsoft.Shadow(color=#909090,direction=120,strength=4);/*ie*/
+          -moz-box-shadow: 2px 2px 10px #909090;/*firefox*/
+          -webkit-box-shadow: 2px 2px 10px #909090;/*safari或chrome*/
+          box-shadow:2px 2px 10px #909090;/*opera或ie9*/
+      }
+      td
+      {
+          text-align:center;
+      }
+      .set{
+          width:50px;
+      }
+  </style>
+</head>
+<body>
+    <audio controls="controls" autoplay="autoplay" id="audio_player" src="/test/msg.mp3" style="display:none">
+    你的浏览器不支持audio</audio>
+    <div id="main" class="shadow">
+        <table width=100%  height=100% border="0" cellspacing="0" cellpadding="0" bordercolor="#009900">
+            <tr bgcolor="#cccccc" height=10%>
+                <td width=25%><b>模块日期</b></td>
+                <td width=15%><b>模块时间</b></td>
+                <td width=15%><b>环境湿度</b></td>
+                <td width=15%><b>环境温度</b></td>
+                <td width=15%><b>在线数</b></td>
+                <td width=15%><b>模拟量</b></td>
+                <td width=10%><b>继电器</b></td>
+            </tr>
+            <tr height=5%>
+                <td><p id="date"></p></td>
+                <td><p id="time"></p></td>
+                <td><p id="dhthumi"></p></td>
+                <td><p id="dhttemp"></p></td>
+                <td><p id="num"></p></td>
+                <td><p id="adc"></p></td>
+                <td><p id="relay"></p></td>
+            </tr>
+            <tr>
+                <td >
+                    <div>
+                        <p id="msg">消息:</p><br><br>
+                        <p id="type">设备类型:</p><br><br>
+                        <table border="1" height=100% width=100% cellspacing="0" cellpadding="0" >
+                        <tr><td width=20%>变量</td><td width=20%>测量值</td><td width=20%>最小值</td><td width=20%>最大值</td><td width=20%>设定值</td></tr>
+                        <tr><td><p>温度</p></td><td id="temp"></td><td id="tempMin"></td><td id="tempMax"></td><td><input type="text" id="tempSet" class="set" onfocus="on_focus(1)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>速度</p></td><td id="speed"></td><td id="speedMin"></td><td id="speedMax"><td><input type="text" id="speedSet" class="set" onfocus="on_focus(2)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>湿度</p></td><td id="humi"></td><td id="humiMin"></td><td id="humiMax"><td><input type="text" id="humiSet" class="set" onfocus="on_focus(3)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>浓度</p></td><td id="concent"></td><td id="concentMin"></td><td id="concentMax"><td><input type="text" id="concentSet" class="set" onfocus="on_focus(4)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>时间</p></td><td id="tm"></td><td><td></td><td><input type="text" id="tmSet" class="set" onfocus="on_focus(5)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>压力</p></td><td id="pressure"></td><td id="pressureMin"></td><td id="pressureMax"><td><input type="text" id="pressureSet" class="set" onfocus="on_focus(6)" onblur="on_blur()"/></td></tr>
+                        <tr><td><p>光照</p></td><td id="illum"></td><td id="illumMin"></td><td id="illumMax"><td><input type="text" id="illumSet" class="set" onfocus="on_focus(7)" onblur="on_blur()"/></td></tr>
+                        </table>
+                        <p id="dbop">数据库已关闭</p>
+                    </div>
+                </td>
+                <td colspan="6"><div id="container"></div></td>
+            </tr>
+            <tr height=5%>
+                <td><p id="status">正在连接中</p></td>
+                <td><p id="htbus">485连接中</p></td>
+                <td><p id="db">数据库未记录</p></td>
+                <td><input type="text" id="ipaddr" placeholder="输入ip地址并点击连接" onfocus="on_focus(8)" onblur="on_blur()"/></td>
+                <td><button onclick="tmsync()">同步时间</button></td>
+                <td><a href=location.hostname>进入模块设置</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
