@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>数据显示</title>
-  <meta charset="utf-8">
+  <title>数据查看</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <script src="http://static.mogudz.com/js/jquery.min.js"></script>
   <script src="http://static.mogudz.com/js/highcharts.js"></script>
-<!--   <script src="http://static.mogudz.com/js/mqttws31.js"></script>   -->
+  <script src="http://static.mogudz.com/js/mqttws31.js"></script>  
   <script>
   //全局变量
       var chart;
@@ -41,7 +41,7 @@
           
           $.post("http://"+ip+"/settime", arr,
              function(data){
-               alert("Data Loaded: " + JSON.stringify(data));
+               alert("设置成功" + JSON.stringify(data));
           });    
       }
       function on_focus(v){
@@ -110,7 +110,6 @@
                               var illum = data.dispPara.illum;
                               var concent = data.dispPara.concent;
                               var alarm = data.dispPara.alarm;
-
                               var typeStr = "设备类型: ";
                               switch (data.dispPara.type) {//
                                   case 1:
@@ -498,8 +497,8 @@
   </style>
 </head>
 <body>
-<!--     <audio controls="controls" autoplay="autoplay" id="audio_player" src="/test/msg.mp3" style="display:none">
-    你的浏览器不支持audio</audio> -->
+    <audio controls="controls" autoplay="autoplay" id="audio_player" src="/test/msg.mp3" style="display:none">
+    你的浏览器不支持audio</audio>
     <div id="main" class="shadow">
         <table width=100%  height=100% border="0" cellspacing="0" cellpadding="0" bordercolor="#009900">
             <tr bgcolor="#cccccc" height=10%>
@@ -546,7 +545,7 @@
                 <td><p id="db">数据库未记录</p></td>
                 <td><input type="text" id="ipaddr" placeholder="输入ip地址并点击连接" onfocus="on_focus(8)" onblur="on_blur()"/></td>
                 <td><button onclick="tmsync()">同步时间</button></td>
-                <td><a href="/setpage.htm">进入模块设置</a></td>
+                <td><a href=location.hostname>进入模块设置</a></td>
             </tr>
         </table>
     </div>
